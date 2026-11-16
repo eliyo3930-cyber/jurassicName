@@ -36,7 +36,7 @@ if (blogContainer) {
 
             let commentsHtml = '';
             post.comments.forEach(c => {
-                commentsHtml += `<div class="comment-item"><strong>${c.author}:</strong>${c.text}</div>`;
+                commentsHtml += `<div class="comment-item"><strong>${c.author}:</strong> ${c.text}</div>`;
             });
 
             postDiv.innerHTML = `
@@ -44,7 +44,8 @@ if (blogContainer) {
                 <h3>${post.title}</h3>
                 <p>${post.content}</p>
                 <div style="margin-top: 15px; border-top: 1px solid rgba(212, 175, 55, 0.2); padding-top: 10px;">
-                    <p style="color: var(--accent-gold); font-size: 0.9rem; margin-bottom: 5px;">Comments (${post.comments.length}):</p>${commentsHtml.length > 0 ? commentsHtml : '<p style="color: var(--text-muted); font-size: 0.9rem;">No comments yet. Be the first!</p>'}
+                    <p style="color: var(--accent-gold); font-size: 0.9rem; margin-bottom: 5px;">Comments (${post.comments.length}):</p>
+                    ${commentsHtml.length > 0 ? commentsHtml : '<p style="color: var(--text-muted); font-size: 0.9rem;">No comments yet. Be the first!</p>'}
                     
                     <div class="comment-input-group">
                         <input type="text" id="blog-author-${index}" placeholder="Your name" style="margin-bottom:0; flex:1;">
@@ -59,4 +60,87 @@ if (blogContainer) {
 
     window.addBlogComment = function(postIndex) {
         const authorInput = document.getElementById(`blog-author-${postIndex}`);
-        const textInput = document.getElementById(`blog-text
+        const textInput = document.getElementById(`blog-text-${postIndex}`);
+
+        if (!authorInput.value || !textInput.value) {
+            alert('Please fill out both your name and comment.');
+            return;
+        }
+
+        blogPosts[postIndex].comments.push({ author: authorInput.value, text: textInput.value });
+        localStorage.setItem('jurassic_blog_posts', JSON.stringify(blogPosts));
+        renderBlogPosts();
+    }
+
+    renderBlogPosts();
+}
+
+const postForm = document.getElementById('postForm');
+if (postForm) {
+    let posts = JSON.parse(localStorage.getItem('jurassic_community_posts')) || [
+        { id: 1, author: "Visitor Mark", content: "The fossil displays in the main hall are breathtaking!", comments: [{ author: "Staff", text: "Thanks for visiting Mark!" }] }
+    ];
+
+    const postsContainer = document.getElementById('postsContainer');
+
+    function renderCommunityPosts() {
+        postsContainer.innerHTML = '';
+        if (posts.length === 0) {
+            postsContainer.innerHTML = '<p style="color:var(--text-muted);">No posts yet.</p>';
+            return;
+        }
+
+        posts.forEach((post, index) => {
+            let postDiv = document.createElement('div');
+            postDiv.className = 'blog-post';
+            
+            let commentsHtml = '';
+            post.comments.forEach(c => {
+                commentsHtml += `<div class="comment-item"><strong>${c.author}:</strong> ${c.text}</div>`;
+            });
+
+            postDiv.innerHTML = `
+                <p><strong>${post.author}</strong></p>
+                <p>${post.content}</p>
+                <div style="margin-top: 15px; border-top: 1px solid rgba(212, 175, 55, 0.2); padding-top: 10px;">
+                    <p style="color: var(--accent-gold); font-size: 0.9rem; margin-bottom: 5px;">Comments:</p>
+                    ${commentsHtml}
+                    <div class="comment-input-group">
+                        <input type="text" id="comm-author-${index}" placeholder="Your name" style="margin-bottom:0; flex:1;">
+                        <input type="text" id="comm-text-${index}" placeholder="Write a comment..." style="margin-bottom:0; flex:2;">
+                        <button onclick="addCommunityComment(${index})" style="padding: 5px 15px;">Reply</button>
+                    </div>
+                </div>
+            `;
+            postsContainer.appendChild(postDiv);
+        });
+    }
+
+    postForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const author = document.getElementById('authorName').value;
+        const content = document.getElementById('postContent').value;
+
+        posts.unshift({ id: Date.now(), author, content, comments: [] });
+        localStorage.setItem('jurassic_community_posts', JSON.stringify(posts));
+        
+        postForm.reset();
+        renderCommunityPosts();
+    });
+
+    window.addCommunityComment = function(postIndex) {
+        const authorInput = document.getElementById(`comm-author-${postIndex}`);
+        const textInput = document.getElementById(`comm-text-${postIndex}`);
+        
+        if (!authorInput.value || !textInput.value) {
+            alert('Please enter both your name and comment text.');
+            return;
+        }
+
+        posts[postIndex].comments.push({ author: authorInput.value, text: textInput.value });
+        localStorage.setItem('jurassic_community_posts', JSON.stringify(posts));
+        renderCommunityPosts();
+    }
+
+    renderCommunityPosts();
+}
